@@ -11,7 +11,9 @@
   --bg-bubble-npc: #2a2a2a; --bg-bubble-me: #2a5b7a;
   --text: #f0f0f0; --text-dim: #8a8a8a; --accent: #e53935; --border: #2a2a2a;
   --radius: 16px; --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --header-h: 56px; --tabbar-h: 60px;
+  --header-h: 56px; --tabbar-h: 70px;
+  --card-bg: #ffffff; --card-text: #111; --card-text-dim: #666; --card-border: #e0e0e0;
+  --rel-blue: #4a90e2; --rel-green: #34c759; --rel-pink: #ff2d55; --rel-red: #ff3b30;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; padding: 0; height: 100dvh; overflow: hidden; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; }
@@ -19,306 +21,171 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 #app { display: flex; flex-direction: column; height: 100dvh; }
 .screen { flex: 1; overflow: hidden; display: flex; flex-direction: column; padding-top: var(--safe-top); }
 .tabbar { display: flex; height: calc(var(--tabbar-h) + var(--safe-bottom)); padding-bottom: var(--safe-bottom); border-top: 1px solid var(--border); background: var(--bg-elev); flex-shrink: 0; }
-.tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--text-dim); font-size: 11px; }
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--text-dim); font-size: 11px; transition: color 0.2s; }
 .tab.active { color: var(--text); }
-.tab-icon { font-size: 18px; }
-.tab-label { font-size: 9px; }
-.page-header { padding: 16px 20px 8px; flex-shrink: 0; }
-.page-header h1 { margin: 0; font-size: 24px; font-weight: 700; }
-.page-header .subtitle { color: var(--text-dim); font-size: 13px; margin-top: 4px; }
-.chat-list { flex: 1; overflow-y: auto; padding: 8px 0; }
-.chat-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border); }
-.chat-item:active { background: var(--bg-elev); }
-.chat-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: #333; }
-.chat-info { flex: 1; min-width: 0; }
-.chat-name { font-weight: 600; font-size: 15px; margin-bottom: 2px; }
-.chat-preview { color: var(--text-dim); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tab-icon { font-size: 22px; }
+.tab-label { font-size: 10px; font-weight: 500; }
+.home-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px 16px; padding: 20px; overflow-y: auto; }
+.app-icon-wrapper { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+.app-icon { width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+.app-icon.tg { background: linear-gradient(135deg, #2AABEE, #229ED9); }
+.app-icon.ig { background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+.app-icon.tw { background: #000; border: 1px solid #333; }
+.app-icon.stats { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+.app-name { font-size: 12px; color: var(--text); font-weight: 500; }
+.home-header { padding: 20px 20px 10px; }
+.home-header h2 { margin: 0 0 4px; font-size: 22px; }
+.home-header p { margin: 0; color: var(--text-dim); font-size: 13px; }
+.page-header { padding: 16px 20px 8px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; }
+.page-header h1 { margin: 0; font-size: 24px; font-weight: 700; flex: 1; }
+.back-btn-header { font-size: 24px; color: var(--accent); padding-right: 8px; }
+.list-container { flex: 1; overflow-y: auto; padding: 8px 0; }
+.list-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.list-item:active { background: var(--bg-elev); }
+.avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: #333; }
+.list-info { flex: 1; min-width: 0; }
+.list-name { font-weight: 600; font-size: 15px; margin-bottom: 2px; }
+.list-desc { color: var(--text-dim); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .chat-header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; height: var(--header-h); border-bottom: 1px solid var(--border); background: var(--bg-elev); flex-shrink: 0; }
-.back-btn { font-size: 22px; width: 32px; color: var(--accent); }
-.chat-header .chat-avatar { width: 36px; height: 36px; }
-.chat-header-info { flex: 1; }
-.chat-header-name { font-weight: 600; font-size: 15px; }
-.chat-header-status { font-size: 12px; color: var(--text-dim); }
+.chat-header .avatar { width: 36px; height: 36px; }
 .messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
 .msg { max-width: 78%; padding: 10px 14px; border-radius: 18px; font-size: 15px; line-height: 1.35; word-wrap: break-word; white-space: pre-wrap; }
 .msg.npc { align-self: flex-start; background: var(--bg-bubble-npc); border-bottom-left-radius: 4px; }
 .msg.me { align-self: flex-end; background: var(--bg-bubble-me); border-bottom-right-radius: 4px; }
 .typing { align-self: flex-start; color: var(--text-dim); font-style: italic; font-size: 13px; padding: 6px 14px; }
 .input-bar { display: flex; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--border); background: var(--bg-elev); padding-bottom: calc(8px + var(--safe-bottom)); flex-shrink: 0; }
-.input-bar input { flex: 1; background: var(--bg-input); border: none; border-radius: 20px; padding: 10px 16px; color: var(--text); font-size: 15px; font-family: inherit; outline: none; }
-.input-bar input:focus { background: #2e2e2e; }
+.input-bar input { flex: 1; background: var(--bg-input); border: none; border-radius: 20px; padding: 10px 16px; color: var(--text); font-size: 15px; outline: none; }
 .send-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); color: white; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.send-btn:disabled { opacity: 0.4; }
-.ig-feed { flex: 1; overflow-y: auto; }
-.ig-post { background: var(--bg-elev); margin-bottom: 12px; }
-.ig-post-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
-.ig-post-header .chat-avatar { width: 32px; height: 32px; }
-.ig-post-author { font-weight: 600; font-size: 14px; flex: 1; }
-.ig-post-img { width: 100%; aspect-ratio: 1; object-fit: cover; background: #222; display: block; }
-.ig-post-caption { padding: 10px 14px; font-size: 14px; line-height: 1.4; }
-.ig-post-actions { display: flex; gap: 16px; padding: 0 14px 8px; color: var(--text-dim); font-size: 13px; align-items: center; }
-.ig-like-btn { color: var(--text-dim); font-size: 20px; }
-.ig-like-btn.liked { color: var(--accent); }
-.ig-comments { padding: 0 14px 12px; border-top: 1px solid var(--border); margin-top: 4px; }
-.ig-comment { padding: 6px 0; font-size: 13px; line-height: 1.4; }
-.ig-comment b { color: var(--text); margin-right: 6px; }
-.ig-comment-me b { color: #4fc3f7; }
-.ig-comment-input { display: flex; gap: 8px; margin-top: 8px; }
-.ig-comment-input input { flex: 1; background: var(--bg-input); border: none; border-radius: 16px; padding: 8px 14px; color: var(--text); font-size: 13px; outline: none; }
-.ig-comment-input button { color: #4fc3f7; font-size: 13px; font-weight: 600; }
-.tw-feed { flex: 1; overflow-y: auto; }
-.tw-tweet { padding: 12px 16px; border-bottom: 1px solid var(--border); }
-.tw-tweet-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.tw-tweet-header .chat-avatar { width: 28px; height: 28px; }
-.tw-tweet-author { font-weight: 600; font-size: 14px; }
-.tw-tweet-author span { color: var(--text-dim); font-weight: 400; margin-left: 6px; font-size: 12px; }
-.tw-tweet-text { font-size: 15px; line-height: 1.4; margin-bottom: 8px; }
-.tw-tweet-actions { display: flex; gap: 20px; color: var(--text-dim); font-size: 13px; align-items: center; }
-.tw-replies { margin-top: 10px; border-left: 2px solid var(--border); padding-left: 12px; display: flex; flex-direction: column; gap: 8px; }
-.tw-reply { font-size: 13px; line-height: 1.4; }
-.tw-reply b { color: var(--text); margin-right: 6px; }
-.tw-reply-me b { color: #4fc3f7; }
-.tw-reply-input { display: flex; gap: 8px; margin-top: 8px; }
-.tw-reply-input input { flex: 1; background: var(--bg-input); border: none; border-radius: 16px; padding: 8px 14px; color: var(--text); font-size: 13px; outline: none; }
-.tw-reply-input button { color: #4fc3f7; font-size: 13px; font-weight: 600; }
-.world-locations { flex: 1; overflow-y: auto; padding: 8px 0; }
-.world-loc { display: flex; align-items: center; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border); }
-.world-loc:active { background: var(--bg-elev); }
-.world-loc-icon { font-size: 28px; width: 40px; text-align: center; }
-.world-loc-info { flex: 1; }
-.world-loc-name { font-weight: 600; font-size: 15px; }
-.world-loc-desc { color: var(--text-dim); font-size: 12px; margin-top: 2px; }
-.world-npcs { padding: 8px 0; flex: 1; overflow-y: auto; }
-.world-npc { display: flex; align-items: center; gap: 12px; padding: 10px 20px; border-bottom: 1px solid var(--border); }
-.world-npc:active { background: var(--bg-elev); }
+.profile-wrapper { padding: 16px; overflow-y: auto; flex: 1; background: var(--bg); }
+.profile-card { background: var(--card-bg); color: var(--card-text); border-radius: 20px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); margin-bottom: 16px; }
+.profile-top { display: flex; gap: 16px; margin-bottom: 16px; }
+.profile-top .avatar { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--card-border); }
+.profile-title h2 { margin: 0 0 4px; font-size: 22px; font-weight: 700; }
+.profile-title .handle { color: var(--card-text-dim); font-size: 14px; margin-bottom: 8px; }
+.status-badge { display: inline-block; background: #e6f0ff; color: #0056b3; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; }
+.profile-desc { font-size: 14px; color: var(--card-text-dim); margin-bottom: 16px; line-height: 1.4; }
+.profile-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+.btn-action { background: #f0f4f8; color: var(--card-text); padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; border: 1px solid var(--card-border); }
+.btn-action.primary { background: #e6f0ff; color: #0056b3; border-color: #b3d4ff; }
+.rel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--card-border); padding-bottom: 8px; }
+.rel-header h3 { margin: 0; font-size: 16px; font-weight: 700; }
+.rel-badge { background: #e6f0ff; color: #0056b3; padding: 2px 8px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+.rel-row { display: flex; align-items: center; margin-bottom: 10px; font-size: 14px; }
+.rel-label { width: 100px; font-weight: 600; }
+.rel-bar-bg { flex: 1; height: 8px; background: #edf2f7; border-radius: 4px; margin: 0 12px; overflow: hidden; }
+.rel-bar-fill { height: 100%; border-radius: 4px; }
+.rel-value { width: 50px; text-align: right; font-weight: 600; color: var(--card-text-dim); font-size: 13px; }
+.romance-block { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--card-border); font-size: 14px; }
+.romance-block b { display: block; margin-bottom: 4px; }
+.romance-warning { color: #d32f2f; font-weight: 600; }
 .world-scene { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 .scene-line { font-size: 14px; line-height: 1.5; color: #d0d0d0; padding: 6px 0; }
 .scene-line.action { font-style: italic; color: #a0a0a0; border-left: 2px solid #555; padding-left: 10px; }
 .scene-line.npc-speech { background: var(--bg-bubble-npc); border-radius: 12px; padding: 10px 14px; align-self: flex-start; max-width: 90%; }
 .scene-line.npc-speech b { color: var(--accent); display: block; font-size: 12px; margin-bottom: 4px; }
 .scene-line.player-action { background: rgba(42,91,122,0.3); border-radius: 12px; padding: 10px 14px; align-self: flex-end; max-width: 90%; font-style: italic; }
-.profile-card { margin: 12px 16px; padding: 16px; background: var(--bg-elev); border-radius: var(--radius); }
-.profile-card h2 { margin: 0 0 12px; font-size: 16px; }
-.rel-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; }
-.rel-label { width: 100px; color: var(--text-dim); }
-.rel-bar { flex: 1; height: 6px; background: var(--bg-input); border-radius: 3px; overflow: hidden; }
-.rel-bar-fill { height: 100%; border-radius: 3px; }
-.rel-value { width: 36px; text-align: right; color: var(--text-dim); font-variant-numeric: tabular-nums; }
-.toast { position: fixed; bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 16px); left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.92); color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 0.2s; max-width: 90%; }
-.toast.show { opacity: 1; }
-.messages::-webkit-scrollbar, .chat-list::-webkit-scrollbar, .ig-feed::-webkit-scrollbar, .tw-feed::-webkit-scrollbar, .world-scene::-webkit-scrollbar, .world-locations::-webkit-scrollbar { width: 0; }
+.feed { flex: 1; overflow-y: auto; }
+.post { background: var(--bg-elev); margin-bottom: 12px; padding: 12px; border-radius: 12px; }
+.post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.post-header .avatar { width: 32px; height: 32px; }
+.post-author { font-weight: 600; font-size: 14px; }
+.post-img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; margin-bottom: 8px; background: #222; }
+.post-text { font-size: 14px; line-height: 1.4; margin-bottom: 8px; }
+.post-actions { display: flex; gap: 16px; color: var(--text-dim); font-size: 13px; align-items: center; }
+.like-btn { color: var(--text-dim); font-size: 20px; }
+.like-btn.liked { color: var(--accent); }
+.comments { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.comment { font-size: 13px; margin-bottom: 6px; line-height: 1.4; }
+.comment b { color: var(--text); margin-right: 6px; }
+.comment.me b { color: #4fc3f7; }
+.comment-input { display: flex; gap: 8px; margin-top: 8px; }
+.comment-input input { flex: 1; background: var(--bg-input); border: none; border-radius: 16px; padding: 8px 14px; color: var(--text); font-size: 13px; outline: none; }
+.comment-input button { color: #4fc3f7; font-size: 13px; font-weight: 600; }
+.messages::-webkit-scrollbar, .list-container::-webkit-scrollbar, .feed::-webkit-scrollbar, .profile-wrapper::-webkit-scrollbar, .home-grid::-webkit-scrollbar, .world-scene::-webkit-scrollbar { width: 0; }
 </style>
 </head>
 <body>
 <div id="app">
   <main id="screen" class="screen"></main>
   <nav id="tabbar" class="tabbar">
-    <button class="tab active" data-tab="chats"><span class="tab-icon">💬</span><span class="tab-label">Чаты</span></button>
+    <button class="tab active" data-tab="home"><span class="tab-icon">🏠</span><span class="tab-label">Главная</span></button>
+    <button class="tab" data-tab="chats"><span class="tab-icon">💬</span><span class="tab-label">Чаты</span></button>
     <button class="tab" data-tab="instagram"><span class="tab-icon">📸</span><span class="tab-label">Instagram</span></button>
     <button class="tab" data-tab="twitter"><span class="tab-icon">🐦</span><span class="tab-label">Twitter</span></button>
-    <button class="tab" data-tab="world"><span class="tab-icon">🏫</span><span class="tab-label">Мир</span></button>
-    <button class="tab" data-tab="profile"><span class="tab-icon">👤</span><span class="tab-label">Профиль</span></button>
+    <button class="tab" data-tab="world"><span class="tab-icon">🏫</span><span class="tab-label">Школа</span></button>
   </nav>
 </div>
 <script>
 const CHARACTERS = {
-  cheongsan: {
-    id: 'cheongsan', name: 'Ли Чон-сан', shortName: 'Чон-сан',
-    photo: 'https://placehold.co/200x200/1a3a5c/4fc3f7?text=CS&font=roboto',
-    initialRelationships: { friendship: 20, trust: 10, respect: 15, sympathy: 10, romance: 0, irritation: 5, hostility: 0, familiarity: 30 },
-    greeting: 'О, привет! Ты новенький, да? Я Чон-сан. Если что — обращайся.'
-  },
-  onjo: {
-    id: 'onjo', name: 'Нам Он-джо', shortName: 'Он-джо',
-    photo: 'https://placehold.co/200x200/3a1a3a/c97ce8?text=OJ&font=roboto',
-    initialRelationships: { friendship: 25, trust: 15, respect: 10, sympathy: 15, romance: 0, irritation: 0, hostility: 0, familiarity: 25 },
-    greeting: 'Привет! Ты же новенький? Я Он-джо. Ты уже знаешь, где столовая?'
-  },
-  suhyeok: {
-    id: 'suhyeok', name: 'Ли Су-хёк', shortName: 'Су-хёк',
-    photo: 'https://placehold.co/200x200/1a1a3a/7986cb?text=SH&font=roboto',
-    initialRelationships: { friendship: 10, trust: 5, respect: 20, sympathy: 5, romance: 0, irritation: 0, hostility: 0, familiarity: 15 },
-    greeting: 'Привет. Я Су-хёк. Не парься, я не кусаюсь.'
-  },
-  namra: {
-    id: 'namra', name: 'Чхве Нам-ра', shortName: 'Нам-ра',
-    photo: 'https://placehold.co/200x200/1a1a1a/9e9e9e?text=NR&font=roboto',
-    initialRelationships: { friendship: 0, trust: 5, respect: 15, sympathy: 0, romance: 0, irritation: 0, hostility: 0, familiarity: 10 },
-    greeting: 'Ты новенький. Я староста класса. Если есть вопросы — спрашивай.'
-  },
-  daesu: {
-    id: 'daesu', name: 'Ян Дэ-су', shortName: 'Дэ-су',
-    photo: 'https://placehold.co/200x200/3a2a1a/ffb74d?text=DS&font=roboto',
-    initialRelationships: { friendship: 30, trust: 20, respect: 5, sympathy: 20, romance: 0, irritation: 0, hostility: 0, familiarity: 25 },
-    greeting: 'Йоу! Я Дэ-су. Ты случайно не принёс что-нибудь поесть? А то я умираю с голоду.'
-  },
-  jimin: {
-    id: 'jimin', name: 'Ким Джи-мин', shortName: 'Джи-мин',
-    photo: 'https://placehold.co/200x200/2a2a1a/fdd835?text=JM&font=roboto',
-    initialRelationships: { friendship: 15, trust: 10, respect: 10, sympathy: 10, romance: 0, irritation: 0, hostility: 0, familiarity: 20 },
-    greeting: 'Ага, новенький. Я Джи-мин. Сразу предупреждаю: я саркастичная и невыносимая.'
-  },
-  hari: {
-    id: 'hari', name: 'Чан Ха-ри', shortName: 'Ха-ри',
-    photo: 'https://placehold.co/200x200/3a1a1a/e57373?text=HR&font=roboto',
-    initialRelationships: { friendship: 20, trust: 15, respect: 20, sympathy: 10, romance: 0, irritation: 0, hostility: 0, familiarity: 20 },
-    greeting: 'Привет. Я Ха-ри, староста и капитан команды. Если хочешь в секцию — поговорим.'
-  },
-  nayeon: {
-    id: 'nayeon', name: 'Ли На-ён', shortName: 'На-ён',
-    photo: 'https://placehold.co/200x200/2a1a2a/ce93d8?text=NY&font=roboto',
-    initialRelationships: { friendship: -10, trust: -15, respect: 0, sympathy: -20, romance: -30, irritation: 15, hostility: 10, familiarity: 5 },
-    greeting: 'Ты кто вообще? Я тебя не знаю. Не мешайся.'
-  },
-  gwinam: {
-    id: 'gwinam', name: 'Юн Гви-нам', shortName: 'Гви-нам',
-    photo: 'https://placehold.co/200x200/3a1a1a/e53935?text=GN&font=roboto',
-    initialRelationships: { friendship: -40, trust: -50, respect: -20, sympathy: -60, romance: -80, irritation: 70, hostility: 60, familiarity: 10 },
-    greeting: 'Какого чёрта тебе надо?'
-  }
+  cheongsan: { id: 'cheongsan', name: 'Ли Чон-сан', shortName: 'Чон-сан', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop&crop=faces', handle: '@cheongsan_2_5', desc: 'Верный, храбрый, немного неуклюжий. Защитит любого.', initialRelationships: { friendship: 20, trust: 10, respect: 15, sympathy: 10, romance: 0, irritation: 5, hostility: 0, familiarity: 30 }, greeting: 'О, привет! Ты новенький, да? Я Чон-сан. Если что — обращайся.' },
+  onjo: { id: 'onjo', name: 'Нам Он-джо', shortName: 'Он-джо', photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop&crop=faces', handle: '@onjo_sunny', desc: 'Добрая и внимательная. Горячий чай и тёплые слова.', initialRelationships: { friendship: 25, trust: 15, respect: 10, sympathy: 15, romance: 0, irritation: 0, hostility: 0, familiarity: 25 }, greeting: 'Привет! Ты же новенький? Я Он-джо. Ты уже знаешь, где столовая?' },
+  suhyeok: { id: 'suhyeok', name: 'Ли Су-хёк', shortName: 'Су-хёк', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces', handle: '@suhyeok_', desc: 'Молчаливый защитник. Спокойный и уверенный.', initialRelationships: { friendship: 10, trust: 5, respect: 20, sympathy: 5, romance: 0, irritation: 0, hostility: 0, familiarity: 15 }, greeting: 'Привет. Я Су-хёк. Не парься, я не кусаюсь.' },
+  namra: { id: 'namra', name: 'Чхве Нам-ра', shortName: 'Нам-ра', photo: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop&crop=faces', handle: '@namra_classrep', desc: 'Холодная и умная. Знает всё и всех.', initialRelationships: { friendship: 0, trust: 5, respect: 15, sympathy: 0, romance: 0, irritation: 0, hostility: 0, familiarity: 10 }, greeting: 'Ты новенький. Я староста класса. Если есть вопросы — спрашивай.' },
+  daesu: { id: 'daesu', name: 'Ян Дэ-су', shortName: 'Дэ-су', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces', handle: '@daesu_eats', desc: 'Обожает еду. Смешной и добродушный.', initialRelationships: { friendship: 30, trust: 20, respect: 5, sympathy: 20, romance: 0, irritation: 0, hostility: 0, familiarity: 25 }, greeting: 'Йоу! Я Дэ-су. Ты случайно не принёс что-нибудь поесть? А то я умираю с голоду.' },
+  jimin: { id: 'jimin', name: 'Ким Джи-мин', shortName: 'Джи-мин', photo: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=200&fit=crop&crop=faces', handle: '@jimin_sarcasm', desc: 'Сарказм 100 уровня. Но преданная подруга.', initialRelationships: { friendship: 15, trust: 10, respect: 10, sympathy: 10, romance: 0, irritation: 0, hostility: 0, familiarity: 20 }, greeting: 'Ага, новенький. Я Джи-мин. Сразу предупреждаю: я саркастичная и невыносимая.' },
+  hari: { id: 'hari', name: 'Чан Ха-ри', shortName: 'Ха-ри', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=faces', handle: '@hari_teamcap', desc: 'Спортивная, лидер. Справедливость превыше всего.', initialRelationships: { friendship: 20, trust: 15, respect: 20, sympathy: 10, romance: 0, irritation: 0, hostility: 0, familiarity: 20 }, greeting: 'Привет. Я Ха-ри, староста и капитан команды. Если хочешь в секцию — поговорим.' },
+  nayeon: { id: 'nayeon', name: 'Ли На-ён', shortName: 'На-ён', photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&h=200&fit=crop&crop=faces', handle: '@nayeon_rich', desc: 'Высокомерная. Думает, что весь мир ей должен.', initialRelationships: { friendship: -10, trust: -15, respect: 0, sympathy: -20, romance: -30, irritation: 15, hostility: 10, familiarity: 5 }, greeting: 'Ты кто вообще? Я тебя не знаю. Не мешайся.' },
+  gwinam: { id: 'gwinam', name: 'Юн Гви-нам', shortName: 'Гви-нам', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop&crop=faces&sat=-100', handle: '@gwinam_', desc: 'Опасный. Агрессивный. Лучше не злить.', initialRelationships: { friendship: -40, trust: -50, respect: -20, sympathy: -60, romance: -80, irritation: 70, hostility: 60, familiarity: 10 }, greeting: 'Какого чёрта тебе надо?' }
 };
-
 const WORLD_LOCATIONS = [
-  { id: 'class', name: 'Класс 2-3', icon: '🏫', desc: 'Твой класс. Парты, доска, окно во двор.', npcs: ['cheongsan', 'onjo', 'namra', 'jimin'] },
-  { id: 'canteen', name: 'Столовая', icon: '🍱', desc: 'Шумно, пахнет едой. Очередь.', npcs: ['daesu', 'hari'] },
-  { id: 'gym', name: 'Спортзал', icon: '🏀', desc: 'Скрип кроссовок, мячи.', npcs: ['suhyeok', 'hari'] },
-  { id: 'roof', name: 'Крыша', icon: '🌇', desc: 'Ветер, город внизу, тишина.', npcs: ['suhyeok', 'namra'] },
+  { id: 'class', name: 'Класс 2-3', icon: '🏫', desc: 'Твой класс. Парты, доска.', npcs: ['cheongsan', 'onjo', 'namra', 'jimin'] },
+  { id: 'canteen', name: 'Столовая', icon: '🍱', desc: 'Шумно, пахнет едой.', npcs: ['daesu', 'hari'] },
+  { id: 'gym', name: 'Спортзал', icon: '🏀', desc: 'Скрип кроссовок.', npcs: ['suhyeok', 'hari'] },
+  { id: 'roof', name: 'Крыша', icon: '🌇', desc: 'Ветер, город внизу.', npcs: ['suhyeok', 'namra'] },
   { id: 'corridor', name: 'Коридор', icon: '🚶', desc: 'Шкафчики, гул голосов.', npcs: ['gwinam', 'nayeon', 'daesu'] }
 ];
-
+const REL_KEYS = ['friendship', 'trust', 'respect', 'sympathy', 'romance', 'irritation', 'hostility', 'familiarity'];
+const REL_LABELS = { friendship: 'Дружба', trust: 'Доверие', respect: 'Уважение', sympathy: 'Симпатия', romance: 'Романтика', irritation: 'Раздражение', hostility: 'Враждебность', familiarity: 'Знакомство' };
 function getCharacter(id) { return CHARACTERS[id]; }
 function getCharacterList() { return Object.values(CHARACTERS); }
 function getLocation(id) { return WORLD_LOCATIONS.find(l => l.id === id); }
-
-const REL_KEYS = ['friendship', 'trust', 'respect', 'sympathy', 'romance', 'irritation', 'hostility', 'familiarity'];
-const REL_LABELS = { friendship: 'Дружба', trust: 'Доверие', respect: 'Уважение', sympathy: 'Симпатия', romance: 'Романтика', irritation: 'Раздражение', hostility: 'Враждебность', familiarity: 'Знакомство' };
-
 function clamp(v, min = -100, max = 100) { return Math.max(min, Math.min(max, v | 0)); }
-function applyRelationshipChanges(current, changes) {
-  const result = { ...current };
-  if (!changes) return result;
-  for (const k of REL_KEYS) {
-    if (typeof changes[k] === 'number' && changes[k] !== 0) {
-      result[k] = clamp((result[k] || 0) + clamp(changes[k], -5, 5));
-    }
-  }
-  return result;
-}
-
-const SAVE_KEY = 'hyosan_save_v2';
-function getDefaultSave() {
-  const npcs = {};
-  for (const c of getCharacterList()) {
-    npcs[c.id] = { relationships: { ...c.initialRelationships }, messages: [], memories: [], worldScenes: {} };
-  }
-  return {
-    version: 2, player: { name: 'Игрок' }, npcs,
-    instagram: { posts: seedInstagramPosts() },
-    twitter: { tweets: seedTwitterTweets() },
-    meta: { createdAt: Date.now(), lastPlayed: Date.now() }
-  };
-}
-function seedInstagramPosts() {
-  const now = Date.now();
-  return [
-    { id: 'p1', authorId: 'daesu', img: 'https://placehold.co/600x600/3a2a1a/ffb74d?text=Food', caption: 'Обед — это святое. Не трогайте мою еду.', ts: now - 3600000, likes: 12, likedByMe: false, comments: [
-      { id: 'c1', authorId: 'jimin', text: 'ты уже третий раз за неделю пост про еду', ts: now - 3500000 },
-      { id: 'c2', authorId: 'daesu', text: 'и что, зато честно', ts: now - 3400000 }
-    ]},
-    { id: 'p2', authorId: 'onjo', img: 'https://placehold.co/600x600/3a1a3a/c97ce8?text=Books', caption: 'Контрольная завтра, а я только открыла учебник 😭', ts: now - 7200000, likes: 24, likedByMe: false, comments: [
-      { id: 'c3', authorId: 'cheongsan', text: 'я тоже, держись', ts: now - 7100000 },
-      { id: 'c4', authorId: 'namra', text: 'Стр. 47-63, если что.', ts: now - 7000000 }
-    ]},
-    { id: 'p3', authorId: 'suhyeok', img: 'https://placehold.co/600x600/1a1a3a/7986cb?text=View', caption: '', ts: now - 10800000, likes: 41, likedByMe: false, comments: [
-      { id: 'c5', authorId: 'hari', text: 'крыша?', ts: now - 10700000 },
-      { id: 'c6', authorId: 'suhyeok', text: 'ага', ts: now - 10600000 }
-    ]}
-  ];
-}
-function seedTwitterTweets() {
-  const now = Date.now();
-  return [
-    { id: 't1', authorId: 'jimin', text: 'кто вообще решил, что контрольная завтра? я не подписывалась на это', ts: now - 1800000, likes: 18, likedByMe: false, replies: [
-      { id: 'r1', authorId: 'daesu', text: 'учитель сказал вчера на уроке', ts: now - 1700000 },
-      { id: 'r2', authorId: 'jimin', text: 'ты вчера спал на уроке 😭', ts: now - 1600000 }
-    ]},
-    { id: 't2', authorId: 'cheongsan', text: 'день был длинный, но мы справились 💪', ts: now - 5400000, likes: 27, likedByMe: false, replies: [
-      { id: 'r3', authorId: 'onjo', text: 'это ты про физру?', ts: now - 5300000 }
-    ]}
-  ];
-}
-function loadSave() {
-  try { const raw = localStorage.getItem(SAVE_KEY); if (!raw) return null; const data = JSON.parse(raw); if (!data || data.version !== 2) return null; return data; } catch { return null; }
-}
-function saveSave(data) {
-  try { data.meta.lastPlayed = Date.now(); localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch (e) { console.error(e); }
-}
-function getNpcState(save, npcId) {
-  if (!save.npcs[npcId]) {
-    const c = getCharacter(npcId);
-    save.npcs[npcId] = { relationships: { ...c.initialRelationships }, messages: [], memories: [], worldScenes: {} };
-  }
-  return save.npcs[npcId];
-}
-
-const state = { view: 'chats', currentNpcId: null, worldLocId: null, worldNpcId: null, save: null, sending: false };
+function applyRelationshipChanges(current, changes) { const result = { ...current }; if (!changes) return result; for (const k of REL_KEYS) { if (typeof changes[k] === 'number' && changes[k] !== 0) result[k] = clamp((result[k] || 0) + clamp(changes[k], -5, 5)); } return result; }
+const SAVE_KEY = 'hyosan_save_v3';
+function getDefaultSave() { const npcs = {}; for (const c of getCharacterList()) npcs[c.id] = { relationships: { ...c.initialRelationships }, messages: [], memories: [], worldScenes: {} }; return { version: 3, player: { name: 'Игрок' }, npcs, instagram: { posts: seedIG() }, twitter: { tweets: seedTW() } }; }
+function seedIG() { const now = Date.now(); return [ { id: 'p1', authorId: 'daesu', img: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&h=600&fit=crop', caption: 'Обед — это святое.', ts: now-3600000, likes: 12, likedByMe: false, comments: [{ id: 'c1', authorId: 'jimin', text: 'опять ты про еду', ts: now-3500000 }] }, { id: 'p2', authorId: 'onjo', img: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600&h=600&fit=crop', caption: 'Контрольная завтра 😭', ts: now-7200000, likes: 24, likedByMe: false, comments: [] } ]; }
+function seedTW() { const now = Date.now(); return [ { id: 't1', authorId: 'jimin', text: 'кто решил, что контрольная завтра?', ts: now-1800000, likes: 18, likedByMe: false, replies: [{ id: 'r1', authorId: 'daesu', text: 'учитель сказал вчера', ts: now-1700000 }] } ]; }
+function loadSave() { try { const raw = localStorage.getItem(SAVE_KEY); if (!raw) return null; const data = JSON.parse(raw); if (data.version !== 3) return null; return data; } catch { return null; } }
+function saveSave(data) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch (e) {} }
+function getNpcState(save, npcId) { if (!save.npcs[npcId]) { const c = getCharacter(npcId); save.npcs[npcId] = { relationships: { ...c.initialRelationships }, messages: [], memories: [], worldScenes: {} }; } return save.npcs[npcId]; }
+const state = { view: 'home', currentNpcId: null, worldLocId: null, worldNpcId: null, save: null, sending: false };
 const screenEl = document.getElementById('screen');
-document.addEventListener('DOMContentLoaded', () => {
-  state.save = loadSave();
-  if (!state.save) { state.save = getDefaultSave(); saveSave(state.save); }
-  attachTabs();
-  render();
-});
-function attachTabs() {
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => { state.view = tab.dataset.tab; updateTabs(state.view); render(); });
-  });
-}
+document.addEventListener('DOMContentLoaded', () => { state.save = loadSave(); if (!state.save) { state.save = getDefaultSave(); saveSave(state.save); } attachTabs(); render(); });
+function attachTabs() { document.querySelectorAll('.tab').forEach(tab => { tab.addEventListener('click', () => { state.view = tab.dataset.tab; updateTabs(state.view); render(); }); }); }
 function updateTabs(active) { document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === active)); }
-function render() {
-  switch (state.view) {
-    case 'chats': return renderChatList();
-    case 'chat': return renderChat();
-    case 'instagram': return renderInstagram();
-    case 'twitter': return renderTwitter();
-    case 'world': return renderWorldLocations();
-    case 'world_location': return renderWorldLocation();
-    case 'world_scene': return renderWorldScene();
-    case 'profile': return renderProfile();
-  }
-}
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
+function render() { switch (state.view) { case 'home': return renderHome(); case 'chats': return renderChatList(); case 'chat': return renderChat(); case 'profile': return renderProfile(); case 'instagram': return renderInstagram(); case 'twitter': return renderTwitter(); case 'world': return renderWorldLocations(); case 'world_location': return renderWorldLocation(); case 'world_scene': return renderWorldScene(); } }
+
+function renderHome() {
+  let html = `<div class="home-header"><h2>Привет, Игрок!</h2><p>День 1 • Хёсан</p></div><div class="home-grid">`;
+  const apps = [ { id: 'chats', name: 'Telegram', icon: '✈️', css: 'tg' }, { id: 'instagram', name: 'Instagram', icon: '📷', css: 'ig' }, { id: 'twitter', name: 'Twitter / X', icon: '𝕏', css: 'tw' }, { id: 'profile_stats', name: 'Stats', icon: '📊', css: 'stats' }, { id: 'world', name: 'Школа', icon: '🏫', css: 'tg' } ];
+  for (const app of apps) html += `<div class="app-icon-wrapper" data-app="${app.id}"><div class="app-icon ${app.css}">${app.icon}</div><div class="app-name">${app.name}</div></div>`;
+  html += `</div>`; screenEl.innerHTML = html;
+  screenEl.querySelectorAll('.app-icon-wrapper').forEach(el => el.addEventListener('click', () => { if (el.dataset.app === 'profile_stats') { state.view = 'profile'; state.currentNpcId = null; render(); } else { state.view = el.dataset.app; render(); } }));
+}
 
 function renderChatList() {
-  let html = `<div class="page-header"><h1>Чаты</h1><div class="subtitle">Хёсан — школьная жизнь</div></div><div class="chat-list">`;
+  let html = `<div class="page-header"><h1>Чаты</h1></div><div class="list-container">`;
   for (const c of getCharacterList()) {
-    const st = getNpcState(state.save, c.id);
-    const last = st.messages[st.messages.length - 1];
-    const preview = last ? (last.role === 'user' ? 'Вы: ' : '') + last.text : c.greeting;
-    html += `<div class="chat-item" data-id="${c.id}"><img class="chat-avatar" src="${c.photo}"><div class="chat-info"><div class="chat-name">${c.name}</div><div class="chat-preview">${escapeHtml(preview).slice(0, 60)}</div></div></div>`;
+    const st = getNpcState(state.save, c.id); const last = st.messages[st.messages.length - 1];
+    const preview = last ? (last.role === 'user' ? 'Вы: ' : '') + last.text : c.desc;
+    html += `<div class="list-item" data-id="${c.id}"><img class="avatar" src="${c.photo}"><div class="list-info"><div class="list-name">${c.name}</div><div class="list-desc">${escapeHtml(preview).slice(0, 40)}</div></div></div>`;
   }
-  html += `</div>`;
-  screenEl.innerHTML = html;
-  screenEl.querySelectorAll('.chat-item').forEach(el => el.addEventListener('click', () => openChat(el.dataset.id)));
+  html += `</div>`; screenEl.innerHTML = html;
+  screenEl.querySelectorAll('.list-item').forEach(el => el.addEventListener('click', () => { state.currentNpcId = el.dataset.id; state.view = 'chat'; render(); }));
 }
-function openChat(npcId) {
-  state.currentNpcId = npcId; state.view = 'chat';
-  const st = getNpcState(state.save, npcId);
-  if (st.messages.length === 0) { st.messages.push({ role: 'npc', text: getCharacter(npcId).greeting, ts: Date.now() }); saveSave(state.save); }
-  render();
-}
+
 function renderChat() {
-  const c = getCharacter(state.currentNpcId);
-  const st = getNpcState(state.save, state.currentNpcId);
-  const warmth = Math.round((st.relationships.friendship + st.relationships.sympathy + st.relationships.trust - st.relationships.hostility - st.relationships.irritation) / 5);
-  const status = warmth > 30 ? 'Тёплое общение' : warmth > 0 ? 'Нейтрально' : warmth > -30 ? 'Напряжённо' : 'Враждебно';
-  let html = `<div class="chat-header"><button class="back-btn" id="back">‹</button><img class="chat-avatar" src="${c.photo}"><div class="chat-header-info"><div class="chat-header-name">${c.name}</div><div class="chat-header-status">${status}</div></div></div><div class="messages" id="messages">`;
+  const c = getCharacter(state.currentNpcId); const st = getNpcState(state.save, state.currentNpcId);
+  if (st.messages.length === 0) { st.messages.push({ role: 'npc', text: c.greeting, ts: Date.now() }); saveSave(state.save); }
+  let html = `<div class="chat-header"><button class="back-btn-header" id="back">‹</button><img class="avatar" src="${c.photo}" id="header-avatar"><div class="list-info"><div class="list-name">${c.name}</div><div class="list-desc">${c.handle}</div></div></div><div class="messages" id="messages">`;
   for (const m of st.messages) html += `<div class="msg ${m.role === 'user' ? 'me' : 'npc'}">${escapeHtml(m.text)}</div>`;
   if (state.sending) html += `<div class="typing">печатает…</div>`;
-  html += `</div><div class="input-bar"><input id="msg-input" type="text" placeholder="Написать сообщение…"><button class="send-btn" id="send">↑</button></div>`;
+  html += `</div><div class="input-bar"><input id="msg-input" type="text" placeholder="Написать..."><button class="send-btn" id="send">↑</button></div>`;
   screenEl.innerHTML = html;
   const input = document.getElementById('msg-input');
   document.getElementById('back').addEventListener('click', () => { state.view = 'chats'; render(); });
+  document.getElementById('header-avatar').addEventListener('click', () => { state.view = 'profile'; render(); });
   document.getElementById('send').addEventListener('click', () => sendMessage(input.value, input));
   input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(input.value, input); });
   const msgs = document.getElementById('messages'); msgs.scrollTop = msgs.scrollHeight;
@@ -326,8 +193,7 @@ function renderChat() {
 }
 async function sendMessage(text, inputEl) {
   text = (text || '').trim(); if (!text || state.sending) return;
-  inputEl.value = '';
-  const npcId = state.currentNpcId, st = getNpcState(state.save, npcId);
+  inputEl.value = ''; const npcId = state.currentNpcId, st = getNpcState(state.save, npcId);
   st.messages.push({ role: 'user', text, ts: Date.now() }); saveSave(state.save);
   state.sending = true; renderChat();
   try {
@@ -339,162 +205,4 @@ async function sendMessage(text, inputEl) {
     if (data.relationshipChanges) st.relationships = applyRelationshipChanges(st.relationships, data.relationshipChanges);
     if (data.newMemory && data.newMemory.trim()) { st.memories.push({ text: data.newMemory.trim(), ts: Date.now() }); if (st.memories.length > 30) st.memories = st.memories.slice(-30); }
     saveSave(state.save);
-  } catch (err) {
-    st.messages.push({ role: 'npc', text: `[ошибка: ${err.message}]`, ts: Date.now() }); saveSave(state.save);
-  } finally { state.sending = false; renderChat(); }
-}
-
-function renderInstagram() {
-  let html = `<div class="page-header"><h1>Instagram</h1><div class="subtitle">Хёсан</div></div><div class="ig-feed">`;
-  for (const p of state.save.instagram.posts) {
-    const author = getCharacter(p.authorId);
-    html += `<div class="ig-post"><div class="ig-post-header"><img class="chat-avatar" src="${author.photo}"><div class="ig-post-author">${author.shortName}</div></div><img class="ig-post-img" src="${p.img}"><div class="ig-post-actions"><button class="ig-like-btn ${p.likedByMe ? 'liked' : ''}" data-like="${p.id}">${p.likedByMe ? '♥' : '♡'}</button><span>${p.likes} лайков</span><span>${p.comments.length} комм.</span></div><div class="ig-post-caption"><b>${author.shortName}</b> ${escapeHtml(p.caption)}</div><div class="ig-comments">`;
-    for (const cm of p.comments) {
-      const ca = getCharacter(cm.authorId); const isMe = cm.authorId === 'me';
-      html += `<div class="ig-comment ${isMe ? 'ig-comment-me' : ''}"><b>${isMe ? 'Ты' : ca.shortName}</b>${escapeHtml(cm.text)}</div>`;
-    }
-    html += `<div class="ig-comment-input"><input type="text" placeholder="Комментарий…" data-cinput="${p.id}"><button data-csend="${p.id}">Отпр.</button></div></div></div>`;
-  }
-  html += `</div>`; screenEl.innerHTML = html;
-  screenEl.querySelectorAll('[data-like]').forEach(btn => btn.addEventListener('click', () => {
-    const p = state.save.instagram.posts.find(x => x.id === btn.dataset.like);
-    p.likedByMe = !p.likedByMe; p.likes += p.likedByMe ? 1 : -1; saveSave(state.save); renderInstagram();
-  }));
-  screenEl.querySelectorAll('[data-csend]').forEach(btn => btn.addEventListener('click', () => {
-    const pid = btn.dataset.csend; const inp = screenEl.querySelector(`[data-cinput="${pid}"]`); sendInstagramComment(pid, inp.value);
-  }));
-}
-async function sendInstagramComment(postId, text) {
-  text = (text || '').trim(); if (!text || state.sending) return;
-  const post = state.save.instagram.posts.find(p => p.id === postId); if (!post) return;
-  post.comments.push({ id: 'cm' + Date.now(), authorId: 'me', text, ts: Date.now() }); saveSave(state.save);
-  state.sending = true; renderInstagram();
-  try {
-    const authorId = post.authorId; const st = getNpcState(state.save, authorId);
-    const history = post.comments.slice(-8, -1).map(cm => { const a = getCharacter(cm.authorId); return { author: cm.authorId === 'me' ? 'Игрок' : a.shortName, text: cm.text }; });
-    const resp = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'instagram_comment', npcId: authorId, message: text, postCaption: post.caption, history, relationships: st.relationships, memories: st.memories }) });
-    const data = await resp.json();
-    if (!resp.ok || data.error) throw new Error(data.error || 'AI недоступен');
-    post.comments.push({ id: 'cm' + Date.now(), authorId, text: data.reply, ts: Date.now() });
-    if (data.relationshipChanges) st.relationships = applyRelationshipChanges(st.relationships, data.relationshipChanges);
-    saveSave(state.save);
-  } catch (err) {
-    post.comments.push({ id: 'cm' + Date.now(), authorId: post.authorId, text: `[ошибка: ${err.message}]`, ts: Date.now() }); saveSave(state.save);
-  } finally { state.sending = false; renderInstagram(); }
-}
-
-function renderTwitter() {
-  let html = `<div class="page-header"><h1>Twitter</h1><div class="subtitle">что происходит</div></div><div class="tw-feed">`;
-  for (const t of state.save.twitter.tweets) {
-    const author = getCharacter(t.authorId);
-    html += `<div class="tw-tweet"><div class="tw-tweet-header"><img class="chat-avatar" src="${author.photo}"><div class="tw-tweet-author">${author.shortName}<span>@${t.authorId}</span></div></div><div class="tw-tweet-text">${escapeHtml(t.text)}</div><div class="tw-tweet-actions"><button class="ig-like-btn ${t.likedByMe ? 'liked' : ''}" data-tlike="${t.id}">${t.likedByMe ? '♥' : '♡'} ${t.likes}</button><span>💬 ${t.replies.length}</span></div><div class="tw-replies">`;
-    for (const r of t.replies) {
-      const ra = getCharacter(r.authorId); const isMe = r.authorId === 'me';
-      html += `<div class="tw-reply ${isMe ? 'tw-reply-me' : ''}"><b>${isMe ? 'Ты' : ra.shortName}</b>${escapeHtml(r.text)}</div>`;
-    }
-    html += `<div class="tw-reply-input"><input type="text" placeholder="Ответить…" data-tinput="${t.id}"><button data-tsend="${t.id}">Отпр.</button></div></div></div>`;
-  }
-  html += `</div>`; screenEl.innerHTML = html;
-  screenEl.querySelectorAll('[data-tlike]').forEach(btn => btn.addEventListener('click', () => {
-    const t = state.save.twitter.tweets.find(x => x.id === btn.dataset.tlike);
-    t.likedByMe = !t.likedByMe; t.likes += t.likedByMe ? 1 : -1; saveSave(state.save); renderTwitter();
-  }));
-  screenEl.querySelectorAll('[data-tsend]').forEach(btn => btn.addEventListener('click', () => {
-    const tid = btn.dataset.tsend; const inp = screenEl.querySelector(`[data-tinput="${tid}"]`); sendTwitterReply(tid, inp.value);
-  }));
-}
-async function sendTwitterReply(tweetId, text) {
-  text = (text || '').trim(); if (!text || state.sending) return;
-  const tweet = state.save.twitter.tweets.find(t => t.id === tweetId); if (!tweet) return;
-  tweet.replies.push({ id: 'tr' + Date.now(), authorId: 'me', text, ts: Date.now() }); saveSave(state.save);
-  state.sending = true; renderTwitter();
-  try {
-    const authorId = tweet.authorId; const st = getNpcState(state.save, authorId);
-    const history = tweet.replies.slice(-8, -1).map(r => { const a = getCharacter(r.authorId); return { author: r.authorId === 'me' ? 'Игрок' : a.shortName, text: r.text }; });
-    const resp = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'twitter_reply', npcId: authorId, message: text, tweetText: tweet.text, history, relationships: st.relationships, memories: st.memories }) });
-    const data = await resp.json();
-    if (!resp.ok || data.error) throw new Error(data.error || 'AI недоступен');
-    tweet.replies.push({ id: 'tr' + Date.now(), authorId, text: data.reply, ts: Date.now() });
-    if (data.relationshipChanges) st.relationships = applyRelationshipChanges(st.relationships, data.relationshipChanges);
-    saveSave(state.save);
-  } catch (err) {
-    tweet.replies.push({ id: 'tr' + Date.now(), authorId: tweet.authorId, text: `[ошибка: ${err.message}]`, ts: Date.now() }); saveSave(state.save);
-  } finally { state.sending = false; renderTwitter(); }
-}
-
-function renderWorldLocations() {
-  let html = `<div class="page-header"><h1>Мир</h1><div class="subtitle">Куда пойдём?</div></div><div class="world-locations">`;
-  for (const loc of WORLD_LOCATIONS) {
-    html += `<div class="world-loc" data-loc="${loc.id}"><div class="world-loc-icon">${loc.icon}</div><div class="world-loc-info"><div class="world-loc-name">${loc.name}</div><div class="world-loc-desc">${loc.desc}</div></div></div>`;
-  }
-  html += `</div>`; screenEl.innerHTML = html;
-  screenEl.querySelectorAll('.world-loc').forEach(el => el.addEventListener('click', () => { state.worldLocId = el.dataset.loc; state.view = 'world_location'; render(); }));
-}
-function renderWorldLocation() {
-  const loc = getLocation(state.worldLocId); const npcIds = loc.npcs.filter(id => state.save.npcs[id]);
-  let html = `<div class="chat-header"><button class="back-btn" id="back">‹</button><div class="chat-header-info"><div class="chat-header-name">${loc.icon} ${loc.name}</div><div class="chat-header-status">${loc.desc}</div></div></div><div class="world-npcs">`;
-  if (npcIds.length === 0) html += `<div class="scene-line">Здесь никого нет.</div>`;
-  else for (const id of npcIds) { const c = getCharacter(id); html += `<div class="world-npc" data-npc="${id}"><img class="chat-avatar" src="${c.photo}"><div class="chat-info"><div class="chat-name">${c.name}</div><div class="chat-preview">Подойти и заговорить</div></div></div>`; }
-  html += `</div>`; screenEl.innerHTML = html;
-  document.getElementById('back').addEventListener('click', () => { state.view = 'world'; render(); });
-  screenEl.querySelectorAll('.world-npc').forEach(el => el.addEventListener('click', () => { state.worldNpcId = el.dataset.npc; state.view = 'world_scene'; render(); }));
-}
-function renderWorldScene() {
-  const loc = getLocation(state.worldLocId); const c = getCharacter(state.worldNpcId); const st = getNpcState(state.save, state.worldNpcId);
-  if (!st.worldScenes[loc.id]) st.worldScenes[loc.id] = [];
-  let html = `<div class="chat-header"><button class="back-btn" id="back">‹</button><img class="chat-avatar" src="${c.photo}"><div class="chat-header-info"><div class="chat-header-name">${c.name}</div><div class="chat-header-status">${loc.name}</div></div></div><div class="world-scene" id="world-scene">`;
-  const scene = st.worldScenes[loc.id];
-  if (scene.length === 0) html += `<div class="scene-line action">Ты подходишь к ${c.shortName}.</div>`;
-  for (const line of scene) {
-    if (line.type === 'player_action') html += `<div class="scene-line player-action">${escapeHtml(line.text)}</div>`;
-    else if (line.type === 'npc_action') html += `<div class="scene-line action">${escapeHtml(line.text)}</div>`;
-    else if (line.type === 'npc_speech') html += `<div class="scene-line npc-speech"><b>${c.shortName}</b>${escapeHtml(line.text)}</div>`;
-  }
-  if (state.sending) html += `<div class="typing">…</div>`;
-  html += `</div><div class="input-bar"><input id="world-input" type="text" placeholder="Что ты делаешь / говоришь?"><button class="send-btn" id="world-send">↑</button></div>`;
-  screenEl.innerHTML = html;
-  const input = document.getElementById('world-input');
-  document.getElementById('back').addEventListener('click', () => { state.view = 'world_location'; render(); });
-  document.getElementById('world-send').addEventListener('click', () => sendWorldAction(input.value, input));
-  input.addEventListener('keydown', e => { if (e.key === 'Enter') sendWorldAction(input.value, input); });
-  const sceneEl = document.getElementById('world-scene'); sceneEl.scrollTop = sceneEl.scrollHeight;
-  if (!state.sending) input.focus();
-}
-async function sendWorldAction(text, inputEl) {
-  text = (text || '').trim(); if (!text || state.sending) return;
-  inputEl.value = '';
-  const loc = getLocation(state.worldLocId); const npcId = state.worldNpcId; const st = getNpcState(state.save, npcId);
-  if (!st.worldScenes[loc.id]) st.worldScenes[loc.id] = [];
-  st.worldScenes[loc.id].push({ type: 'player_action', text, ts: Date.now() }); saveSave(state.save);
-  state.sending = true; renderWorldScene();
-  try {
-    const history = st.worldScenes[loc.id].slice(-14, -1).map(l => ({ type: l.type, text: l.text }));
-    const resp = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'world', npcId, message: text, location: loc.name, otherNpcs: loc.npcs.filter(id => id !== npcId).map(id => getCharacter(id).name), history, relationships: st.relationships, memories: st.memories }) });
-    const data = await resp.json();
-    if (!resp.ok || data.error) throw new Error(data.error || 'AI недоступен');
-    if (data.npcAction) st.worldScenes[loc.id].push({ type: 'npc_action', text: data.npcAction, ts: Date.now() });
-    if (data.reply) st.worldScenes[loc.id].push({ type: 'npc_speech', text: data.reply, ts: Date.now() });
-    if (data.relationshipChanges) st.relationships = applyRelationshipChanges(st.relationships, data.relationshipChanges);
-    if (data.newMemory && data.newMemory.trim()) { st.memories.push({ text: data.newMemory.trim(), ts: Date.now() }); if (st.memories.length > 30) st.memories = st.memories.slice(-30); }
-    saveSave(state.save);
-  } catch (err) {
-    st.worldScenes[loc.id].push({ type: 'npc_action', text: `[ошибка: ${err.message}]`, ts: Date.now() }); saveSave(state.save);
-  } finally { state.sending = false; renderWorldScene(); }
-}
-
-function renderProfile() {
-  let html = `<div class="page-header"><h1>Профиль</h1><div class="subtitle">${state.save.player.name} · ученик Хёсана</div></div>`;
-  for (const c of getCharacterList()) {
-    const st = getNpcState(state.save, c.id);
-    html += `<div class="profile-card"><h2>${c.name}</h2>`;
-    for (const k of REL_KEYS) {
-      const v = st.relationships[k] || 0; const color = v >= 0 ? '#4fc3f7' : '#e53935';
-      html += `<div class="rel-row"><div class="rel-label">${REL_LABELS[k]}</div><div class="rel-bar"><div class="rel-bar-fill" style="width:${Math.abs(v)}%;background:${color}"></div></div><div class="rel-value">${v}</div></div>`;
-    }
-    html += `</div>`;
-  }
-  screenEl.innerHTML = html;
-}
-</script>
-</body>
-</html>
+  } catch (err) { st.messages.push({ role: 'npc', text: `[ошибка: ${err.message}]`, ts: Date.now() }); saveSave(state.save); }
