@@ -1,5 +1,6 @@
-const MODEL = 'gemini-2.5-flash';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+// Бесплатная модель от Meta, отлично понимает русский язык
+const MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
 
 const CHARACTERS = {
   cheongsan: { name: 'Ли Чон-сан', core: 'верный, храбрый, защитник, неуклюжий в любви, вспыльчивый, но добрый', speech: 'дружеская, эмоциональная, с шутками', values: 'друзья, справедливость', triggers: 'несправедливость, угрозы друзьям', humor: 'добрый, неуклюжий', hostile: false },
@@ -20,8 +21,8 @@ module.exports = async function handler(req, res) {
   const character = CHARACTERS[npcId];
   if (!character) return res.status(400).json({ error: 'unknown_npc' });
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'Не настроен GEMINI_API_KEY' });
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'Не настроен OPENROUTER_API_KEY в Vercel' });
 
   try {
     let result;
@@ -32,44 +33,40 @@ module.exports = async function handler(req, res) {
     return res.status(200).json(result);
   } catch (e) {
     console.error('handler error', e.message);
-    if (e.status === 429) return res.status(429).json({ error: 'Слишком много запросов. Подожди немного.' });
+    if (e.status === 429) return res.status(429).json({ error: 'Слишком много запросов. Подожди.' });
     return res.status(502).json({ error: e.publicMessage || 'AI временно недоступен' });
   }
 };
 
-async function callGemini(apiKey, systemPrompt, contents, schema, temperature = 1.05) {
-  const r = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
+async function callOpenAI(apiKey, systemPrompt, messages, responseFormat, temperature = 1.0) {
+  const r = await fetch(OPENROUTER_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://vercel.app',
+      'X-Title': 'Hyosan Life Sim'
+    },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      contents,
-      generationConfig: { responseMimeType: 'application/json', responseSchema: schema, temperature, maxOutputTokens: 600 }
+      model: MODEL,
+      messages: [{ role: 'system', content: systemPrompt }, ...messages],
+      temperature: temperature,
+      response_format: responseFormat ? { type: 'json_object' } : undefined
     })
   });
+
   if (!r.ok) {
     const txt = await r.text().catch(() => '');
-    console.error('Gemini', r.status, txt.slice(0, 300));
-    const e = new Error('gemini_error'); e.status = r.status; throw e;
+    console.error('OpenRouter Error', r.status, txt.slice(0, 300));
+    const e = new Error('api_error'); e.status = r.status; throw e;
   }
+  
   const data = await r.json();
-  const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  const raw = data?.choices?.[0]?.message?.content;
   if (!raw) { const e = new Error('empty'); e.publicMessage = 'Пустой ответ AI'; throw e; }
+  
   try { return JSON.parse(raw); }
   catch { const e = new Error('bad_json'); e.publicMessage = 'Некорректный JSON от AI'; throw e; }
-}
-
-function baseRelSchema() {
-  return {
-    type: 'object',
-    properties: {
-      friendship: { type: 'integer' }, trust: { type: 'integer' },
-      respect: { type: 'integer' }, sympathy: { type: 'integer' },
-      romance: { type: 'integer' }, irritation: { type: 'integer' },
-      hostility: { type: 'integer' }, familiarity: { type: 'integer' }
-    },
-    required: ['friendship', 'trust', 'respect', 'sympathy', 'romance', 'irritation', 'hostility', 'familiarity']
-  };
 }
 
 function charBlock(c, rel, mem) {
@@ -91,94 +88,78 @@ function charBlock(c, rel, mem) {
 
 async function callChat(body, c, apiKey) {
   const { message, history = [], relationships = {}, memories = [], playerProfile = {} } = body;
-  if (!message) throw Object.assign(new Error('empty'), { publicMessage: 'Пустое сообщение' });
-  const profileStr = playerProfile.name ? `\nПРОФИЛЬ ИГРОКА (Telegram): Имя: ${playerProfile.name}, Юзернейм: ${playerProfile.handle}, О себе: ${playerProfile.desc}` : '';
+  const profileStr = playerProfile.name ? `\nПРОФИЛЬ ИГРОКА: Имя: ${playerProfile.name}, Юзернейм: ${playerProfile.handle}, О себе: ${playerProfile.desc}` : '';
   const sys = `${charBlock(c, relationships, memories)}${profileStr}
 
 ПРАВИЛА:
 1. Отвечай только от лица ${c.name}, по-русски, 1-3 предложения, как в переписке.
 2. Тон — строго по характеру и текущим отношениям.
 3. Никогда не пиши за игрока, не описывай его мысли и действия.
-4. Верни JSON: { "reply": "...", "relationshipChanges": {...}, "newMemory": "..." }
-5. Изменения отношений: обычно -3..+3 только если сообщение значимое.
-   Оскорбление: respect -2, trust -2, irritation +3, hostility +2
-   Поддержка: trust +2, friendship +1, sympathy +1
-   Флирт (позволяет): sympathy +1, romance +1
-   Флирт (не позволяет): irritation +2, hostility +1
+4. Верни строго JSON: { "reply": "твой текст", "relationshipChanges": { "friendship": 0, "trust": 0, "respect": 0, "sympathy": 0, "romance": 0, "irritation": 0, "hostility": 0, "familiarity": 0 }, "newMemory": "" }
+5. Изменения отношений: обычно -3..+3 только если сообщение значимое. Оскорбление: irritation +3. Поддержка: trust +2. Флирт: sympathy +1, romance +1.
 6. newMemory: если сообщение игрока значимое — одна короткая фраза от 3-го лица, иначе "".`;
-  const contents = (history || []).map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }));
-  contents.push({ role: 'user', parts: [{ text: message }] });
-  const schema = { type: 'object', properties: { reply: { type: 'string' }, relationshipChanges: baseRelSchema(), newMemory: { type: 'string' } }, required: ['reply', 'relationshipChanges'] };
-  const parsed = await callGemini(apiKey, sys, contents, schema);
+  
+  const messages = history.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }));
+  messages.push({ role: 'user', content: message });
+  
+  const parsed = await callOpenAI(apiKey, sys, messages, true);
   return { reply: String(parsed.reply || '').trim() || '…', relationshipChanges: parsed.relationshipChanges || {}, newMemory: parsed.newMemory || '' };
 }
 
 async function callWorld(body, c, apiKey) {
   const { message, location = '', otherNpcs = [], history = [], relationships = {}, memories = [], playerProfile = {} } = body;
-  if (!message) throw Object.assign(new Error('empty'), { publicMessage: 'Пустое действие' });
   const othersStr = otherNpcs.length ? `Рядом также: ${otherNpcs.join(', ')}.` : 'Рядом никого нет.';
   const profileStr = playerProfile.name ? `\nИГРОК: ${playerProfile.name} (${playerProfile.handle}).` : '';
   const sys = `${charBlock(c, relationships, memories)}${profileStr}
 
 СЦЕНА: ${location}. ${othersStr}
-Это ролевая сцена. Игрок описывает действия и реплики свободным текстом.
-Ты отвечаешь ТОЛЬКО за ${c.name}. Остальные — фон, не давай им реплик.
+Это ролевая сцена. Игрок описывает действия.
+Ты отвечаешь ТОЛЬКО за ${c.name}. Остальные — фон.
 Формат ответа:
-- npcAction: короткое физическое действие или реакция (1 предложение, от 3-го лица, настоящее время)
-- reply: реплика ${c.name} (1-3 предложения, по характеру)
-Если персонаж молчит — reply может быть пустым, но npcAction обязателен.
-Никогда не пиши за игрока. По-русски.
-Верни JSON: { "npcAction": "...", "reply": "...", "relationshipChanges": {...}, "newMemory": "..." }
-Изменения отношений: -3..+3 только за значимое. Обычно 0.`;
-  const contents = (history || []).map(l => ({
-    role: l.type === 'player_action' ? 'user' : 'model',
-    parts: [{ text: l.type === 'player_action' ? `[действие игрока] ${l.text}` : l.type === 'npc_action' ? `[действие] ${l.text}` : `[реплика] ${l.text}` }]
+- npcAction: короткое действие или реакция (1 предложение, от 3-го лица)
+- reply: реплика ${c.name} (1-3 предложения)
+Верни строго JSON: { "npcAction": "...", "reply": "...", "relationshipChanges": { "friendship": 0, "trust": 0, "respect": 0, "sympathy": 0, "romance": 0, "irritation": 0, "hostility": 0, "familiarity": 0 }, "newMemory": "..." }`;
+
+  const messages = history.map(l => ({
+    role: l.type === 'player_action' ? 'user' : 'assistant',
+    content: l.type === 'player_action' ? `[действие игрока] ${l.text}` : (l.type === 'npc_action' ? `[действие] ${l.text}` : `[реплика] ${l.text}`)
   }));
-  contents.push({ role: 'user', parts: [{ text: `[действие игрока] ${message}` }] });
-  const schema = { type: 'object', properties: { npcAction: { type: 'string' }, reply: { type: 'string' }, relationshipChanges: baseRelSchema(), newMemory: { type: 'string' } }, required: ['npcAction', 'relationshipChanges'] };
-  const parsed = await callGemini(apiKey, sys, contents, schema, 1.1);
+  messages.push({ role: 'user', content: `[действие игрока] ${message}` });
+
+  const parsed = await callOpenAI(apiKey, sys, messages, true, 1.1);
   return { npcAction: String(parsed.npcAction || '').trim(), reply: String(parsed.reply || '').trim(), relationshipChanges: parsed.relationshipChanges || {}, newMemory: parsed.newMemory || '' };
 }
 
 async function callInstagram(body, c, apiKey) {
   const { message, postCaption = '', history = [], relationships = {}, memories = [], playerProfile = {} } = body;
-  if (!message) throw Object.assign(new Error('empty'), { publicMessage: 'Пустой комментарий' });
   const histStr = history.length ? history.map(h => `${h.author}: ${h.text}`).join('\n') : 'пока нет';
-  const profileStr = playerProfile.name ? `\nПРОФИЛЬ ИГРОКА (Instagram): ${playerProfile.name} (${playerProfile.handle}).` : '';
+  const profileStr = playerProfile.name ? `\nПРОФИЛЬ ИГРОКА: ${playerProfile.name} (${playerProfile.handle}).` : '';
   const sys = `${charBlock(c, relationships, memories)}${profileStr}
 
-КОНТЕКСТ: Instagram. Пост ${c.name} с подписью: "${postCaption}".
-Игрок оставил комментарий. Ответь как ${c.name} в комментариях — коротко (1-2 предложения), по характеру.
-Можно ответить и другим комментаторам, если уместно, но обращайся к игроку.
-История комментариев под постом:
-${histStr}
+КОНТЕКСТ: Instagram. Твой пост: "${postCaption}".
+Игрок оставил комментарий. Ответь коротко (1-2 предложения).
+История: ${histStr}
 
-Никогда не пиши за игрока. По-русски.
-Верни JSON: { "reply": "...", "relationshipChanges": {...}, "newMemory": "" }
-Изменения: -2..+2 только за значимое.`;
-  const contents = [{ role: 'user', parts: [{ text: message }] }];
-  const schema = { type: 'object', properties: { reply: { type: 'string' }, relationshipChanges: baseRelSchema(), newMemory: { type: 'string' } }, required: ['reply', 'relationshipChanges'] };
-  const parsed = await callGemini(apiKey, sys, contents, schema, 1.1);
+Верни строго JSON: { "reply": "...", "relationshipChanges": { "friendship": 0, "trust": 0, "respect": 0, "sympathy": 0, "romance": 0, "irritation": 0, "hostility": 0, "familiarity": 0 }, "newMemory": "" }`;
+
+  const messages = [{ role: 'user', content: message }];
+  const parsed = await callOpenAI(apiKey, sys, messages, true, 1.1);
   return { reply: String(parsed.reply || '').trim() || '…', relationshipChanges: parsed.relationshipChanges || {}, newMemory: parsed.newMemory || '' };
 }
 
 async function callTwitter(body, c, apiKey) {
   const { message, tweetText = '', history = [], relationships = {}, memories = [], playerProfile = {} } = body;
-  if (!message) throw Object.assign(new Error('empty'), { publicMessage: 'Пустой ответ' });
   const histStr = history.length ? history.map(h => `${h.author}: ${h.text}`).join('\n') : 'пока нет';
-  const profileStr = playerProfile.name ? `\nПРОФИЛЬ ИГРОКА (Twitter): ${playerProfile.name} (${playerProfile.handle}).` : '';
+  const profileStr = playerProfile.name ? `\nПРОФИЛЬ ИГРОКА: ${playerProfile.name} (${playerProfile.handle}).` : '';
   const sys = `${charBlock(c, relationships, memories)}${profileStr}
 
 КОНТЕКСТ: Twitter. Твой твит: "${tweetText}".
-Игрок ответил на твит. Ответь как ${c.name} — коротко (1-2 предложения), по характеру, в стиле твиттера.
-Ветка ответов:
-${histStr}
+Игрок ответил. Ответь коротко (1-2 предложения).
+Ветка: ${histStr}
 
-Никогда не пиши за игрока. По-русски.
-Верни JSON: { "reply": "...", "relationshipChanges": {...}, "newMemory": "" }
-Изменения: -2..+2 только за значимое.`;
-  const contents = [{ role: 'user', parts: [{ text: message }] }];
-  const schema = { type: 'object', properties: { reply: { type: 'string' }, relationshipChanges: baseRelSchema(), newMemory: { type: 'string' } }, required: ['reply', 'relationshipChanges'] };
-  const parsed = await callGemini(apiKey, sys, contents, schema, 1.1);
+Верни строго JSON: { "reply": "...", "relationshipChanges": { "friendship": 0, "trust": 0, "respect": 0, "sympathy": 0, "romance": 0, "irritation": 0, "hostility": 0, "familiarity": 0 }, "newMemory": "" }`;
+
+  const messages = [{ role: 'user', content: message }];
+  const parsed = await callOpenAI(apiKey, sys, messages, true, 1.1);
   return { reply: String(parsed.reply || '').trim() || '…', relationshipChanges: parsed.relationshipChanges || {}, newMemory: parsed.newMemory || '' };
 }
